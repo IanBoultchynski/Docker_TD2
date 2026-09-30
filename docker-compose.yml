@@ -1,0 +1,74 @@
+services:
+
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    container_name: td2-nginx
+    restart: always
+    ports:
+      - "8080:80"
+      - "8081:80"
+    depends_on:
+      - php
+
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: td2-php
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - mariadb
+      - postgres
+
+  redis:
+    image: redis:alpine
+    container_name: td2-redis
+    restart: always
+
+  mariadb:
+    image: mariadb:10.11
+    container_name: td2-mariadb
+    restart: always
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB1_PASS}
+      MARIADB_DATABASE: ${DB1_NAME}
+      MARIADB_USER: ${DB1_USER}
+      MARIADB_PASSWORD: ${DB1_PASS}
+
+
+      # MYSQL_ROOT_PASSWORD: ${DB1_PASS}
+      # MYSQL_DATABASE: ${DB1_NAME}
+      # MYSQL_USER: ${DB1_USER}
+      # MYSQL_PASSWORD: ${DB1_PASS}
+    networks:
+      default:
+        aliases:
+          - db1
+          - mariadb
+    volumes:
+      - mariadb_data:/var/lib/mysql
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: td2-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB2_NAME}
+      POSTGRES_USER: ${DB2_USER}
+      POSTGRES_PASSWORD: ${DB2_PASS}
+    networks:
+      default:
+        aliases:
+          - db2
+          - postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  mariadb_data: 
+  postgres_data:
